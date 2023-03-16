@@ -33,6 +33,12 @@ export default function Dashboard() {
       <Heading />
 
       <h1 className='flex justify-center mt-20 text-xl'>Dashboard</h1>
+
+      <div className='flex justify-center mt-10'>
+        <Link href={`/dashboard/new`}>
+          <span className='text-xl border p-2'>Create a new product</span>
+        </Link>
+      </div>
     </div>
   )
 }
