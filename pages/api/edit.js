@@ -1,8 +1,9 @@
+import prisma from 'lib/prisma'
+import { getSession } from 'next-auth/react'
+
 import middleware from 'middleware/middleware'
 import nextConnect from 'next-connect'
 
-import prisma from 'lib/prisma'
-import { getSession } from 'next-auth/react'
 import { upload } from 'lib/upload'
 
 const handler = nextConnect()
@@ -19,15 +20,31 @@ handler.post(async (req, res) => {
 
   if (!user) return res.status(401).json({ message: 'User not found' })
 
-  const product = await prisma.product.create({
+  //check if current user is not same as product author
+  const product = await prisma.product.findUnique({
+    where: {
+      id: req.body.id[0],
+    },
+    include: {
+      author: true,
+    },
+  })
+
+  if (product.author.id !== user.id) {
+    return res.status(401).json({ message: 'User not owner of product' })
+  }
+
+  const { title, description, free, price } = req.body
+
+  await prisma.product.update({
     data: {
-      title: req.body.title[0],
-      free: req.body.free[0] === 'true' ? true : false,
-      price: Number(req.body.price[0]) * 100,
-      description: req.body.description[0],
-      author: {
-        connect: { id: user.id },
-      },
+      title: title[0],
+      description: description[0],
+      free: free[0] === 'true' ? true : false,
+      price: price[0] * 100,
+    },
+    where: {
+      id: product.id,
     },
   })
 
@@ -48,8 +65,10 @@ handler.post(async (req, res) => {
     })
   }
 
-  const data = {
-    url: product_url,
+  const data = {}
+
+  if (product_url) {
+    data.url = product_url
   }
 
   if (image_url) {

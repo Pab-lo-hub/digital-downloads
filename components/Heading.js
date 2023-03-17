@@ -19,8 +19,8 @@ export default function Heading() {
         {router.asPath === '/' ? (
           <p>Digital Downloads</p>
         ) : (
-          <Link href={`/`} className='underline'>
-            <p>Home</p>
+          <Link href={`/`}>
+            <a className='underline'>Home</a>
           </Link>
         )}
       </div>
@@ -31,20 +31,22 @@ export default function Heading() {
         (router.asPath === '/dashboard' ? (
           <>
             <div className='mr-3'>
-              <Link href={`/dashboard/sales`} className='underline'>
-                <p>See sales</p>
+              <Link href={`/dashboard/sales`}>
+                <a className='underline'>See sales</a>
               </Link>
             </div>
             <div className='mr-3'>
-              <Link href={`/dashboard/new`} className='underline'>
-                <p>Create a new product</p>
+              <Link href={`/dashboard/new`}>
+                <a className='underline'>Create a new product</a>
               </Link>
             </div>
             <p className='mr-3 font-bold'>Dashboard</p>
           </>
         ) : (
-          <Link href={`/dashboard`} className='flex'>
-              <p className='mr-3 underline'>Dashboard</p>        
+          <Link href={`/dashboard`}>
+            <a className='flex'>
+              <p className='mr-3 underline'>Dashboard</p>
+            </a>
           </Link>
         ))}
       <a

@@ -1,28 +1,30 @@
 import Head from 'next/head'
-import Heading from 'components/Heading'
-import { getProducts } from 'lib/data'
-import prisma from 'lib/prisma'
 import Link from 'next/link'
 
-export default function Home({ products }) {
+import prisma from 'lib/prisma'
+import { getProducts, getUser } from 'lib/data'
+
+import Heading from 'components/Heading'
+
+export default function Profile({ user }) {
   return (
     <div>
       <Head>
-        <title></title>
-        <meta name='description' content='' />
+        <title>Digital Downloads</title>
+        <meta name='description' content='Digital Downloads Website' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
       <Heading />
 
       <h1 className='flex justify-center mt-20 text-xl'>
-        Explore the most popular products
+        Products made by {user.name}
       </h1>
 
       <div className='flex justify-center mt-10'>
         <div className='flex flex-col w-full '>
-          {products &&
-            products.map((product, index) => (
+          {user.products &&
+            user.products.map((product, index) => (
               <div
                 className='border flex justify-between w-full md:w-2/3 xl:w-1/3 mx-auto px-4 my-2 py-5 '
                 key={index}
@@ -56,12 +58,12 @@ export default function Home({ products }) {
 }
 
 export async function getServerSideProps(context) {
-  let products = await getProducts({ take: 3 }, prisma)
-  products = JSON.parse(JSON.stringify(products))
+  let user = await getUser(context.params.id, prisma)
+  user = JSON.parse(JSON.stringify(user))
 
   return {
     props: {
-      products,
+      user,
     },
   }
 }

@@ -1,21 +1,27 @@
-import { useState } from 'react'
-
-import Head from 'next/head'
+import { getProduct } from 'lib/data'
+import { useSession, getSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-
-import { useSession } from 'next-auth/react'
-
+import { useState } from 'react'
+import prisma from 'lib/prisma'
 import Heading from 'components/Heading'
+import Head from 'next/head'
 
-export default function NewProduct() {
+export default function Product({ product }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [title, setTitle] = useState('')
+
+  const [title, setTitle] = useState(product.title)
   const [image, setImage] = useState(null)
-  const [product, setProduct] = useState(null)
-  const [description, setDescription] = useState('')
-  const [price, setPrice] = useState(0)
-  const [free, setFree] = useState(false)
+  const [newproduct, setNewproduct] = useState(null)
+  const [imageUrl, setImageUrl] = useState(product.image)
+  const [description, setDescription] = useState(product.description)
+  const [price, setPrice] = useState(product.price / 100)
+  const [free, setFree] = useState(product.free)
+  const [changedLink, setChangedLink] = useState(false)
+
+  if (!product) {
+    return null
+  }
 
   const loading = status === 'loading'
 
@@ -23,8 +29,8 @@ export default function NewProduct() {
     return null
   }
 
-  if (!session) {
-    router.push('/')
+  if (session && !session.user.name) {
+    router.push('/setup')
   }
 
   return (
@@ -37,8 +43,6 @@ export default function NewProduct() {
 
       <Heading />
 
-      <h1 className='flex justify-center mt-20 text-xl'>Add a new product</h1>
-
       <div className='flex justify-center'>
         <form
           className='mt-10'
@@ -46,24 +50,26 @@ export default function NewProduct() {
             e.preventDefault()
 
             const body = new FormData()
+            body.append('id', product.id)
             body.append('image', image)
-            body.append('product', product)
+            body.append('product', newproduct)
             body.append('title', title)
             body.append('free', free)
             body.append('price', price)
             body.append('description', description)
 
-            await fetch('/api/new', {
+            await fetch('/api/edit', {
               body,
               method: 'POST',
             })
 
-            router.push(`/dashboard`)
+            router.push('/dashboard')
           }}
         >
           <div className='flex-1 mb-5'>
             <div className='flex-1 mb-2'>Product title (required)</div>
             <input
+              value={title}
               onChange={(e) => setTitle(e.target.value)}
               className='border p-1 text-black mb-4'
               required
@@ -84,6 +90,7 @@ export default function NewProduct() {
               <>
                 <div className='flex-1 mb-2'>Product price in $ (required)</div>
                 <input
+                  value={price}
                   pattern='^\d*(\.\d{0,2})?$'
                   onChange={(e) => setPrice(e.target.value)}
                   className='border p-1 text-black mb-4'
@@ -93,6 +100,7 @@ export default function NewProduct() {
             )}
             <div className='flex-1 mb-2'>Description</div>
             <textarea
+              value={description}
               onChange={(e) => setDescription(e.target.value)}
               className='border p-1 text-black '
             />
@@ -113,15 +121,17 @@ export default function NewProduct() {
                       return false
                     }
                     setImage(event.target.files[0])
+                    setImageUrl(URL.createObjectURL(event.target.files[0]))
                   }
                 }}
               />
             </label>
+            <img src={imageUrl} className='w-20 h-20' />
           </div>
 
           <div className='text-sm text-gray-200 '>
             <label className='relative font-medium cursor-pointer  my-3 block'>
-              <p className=''>Product {product && '✅'}</p> (required)
+              <p className=''>Product {product && 'changed ✅'}</p>
               <input
                 type='file'
                 className='hidden'
@@ -131,24 +141,48 @@ export default function NewProduct() {
                       alert('Maximum size allowed is 20MB')
                       return false
                     }
-                    setProduct(event.target.files[0])
+                    setNewproduct(event.target.files[0])
+                    setChangedLink(true)
                   }
                 }}
               />
             </label>
+            {!changedLink && (
+              <a className='underline' href={product.url}>
+                Link
+              </a>
+            )}
           </div>
           <button
-            disabled={title && product && (free || price) ? false : true}
+            disabled={title && (free || price) ? false : true}
             className={`border px-8 py-2 mt-10 font-bold  ${
               title && (free || price)
                 ? ''
                 : 'cursor-not-allowed text-gray-800 border-gray-800'
             }`}
           >
-            Create product
+            Save changes
           </button>
         </form>
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context)
+  if (!session) return { props: {} }
+
+  let product = await getProduct(context.params.id, prisma)
+  product = JSON.parse(JSON.stringify(product))
+
+  if (!product) return { props: {} }
+
+  if (session.user.id !== product.author.id) return { props: {} } //NOT OUR PRODUCT!
+
+  return {
+    props: {
+      product,
+    },
+  }
 }

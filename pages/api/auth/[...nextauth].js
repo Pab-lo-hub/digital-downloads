@@ -7,8 +7,8 @@ export default NextAuth({
   providers: [
     EmailProvider({
       server: process.env.EMAIL_SERVER,
-      from: process.env.EMAIL_FROM
-    })
+      from: process.env.EMAIL_FROM,
+    }),
   ],
 
   database: process.env.DATABASE_URL,
@@ -16,15 +16,18 @@ export default NextAuth({
 
   session: {
     jwt: true,
-    maxAge: 30 * 24 * 60 * 60 // 30 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
   debug: true,
   adapter: PrismaAdapter(prisma),
-	
-	callbacks: {
+
+  callbacks: {
     session: async ({ session, user }) => {
       session.user.id = user.id
+      session.user.image = user.image
+      session.user.username = user.username
+      session.user.name = user.name
       return Promise.resolve(session)
     },
   },
