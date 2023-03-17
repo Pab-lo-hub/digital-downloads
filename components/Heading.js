@@ -19,8 +19,8 @@ export default function Heading() {
         {router.asPath === '/' ? (
           <p>Digital Downloads</p>
         ) : (
-          <Link  className='underline' href={`/Home`}>
-            Home
+          <Link href={`/`} className='underline'>
+            <p>Home</p>
           </Link>
         )}
       </div>
@@ -29,12 +29,22 @@ export default function Heading() {
 
       {session &&
         (router.asPath === '/dashboard' ? (
-          <a className='flex'>
+          <>
+            <div className='mr-3'>
+              <Link href={`/dashboard/sales`} className='underline'>
+                <p>See sales</p>
+              </Link>
+            </div>
+            <div className='mr-3'>
+              <Link href={`/dashboard/new`} className='underline'>
+                <p>Create a new product</p>
+              </Link>
+            </div>
             <p className='mr-3 font-bold'>Dashboard</p>
-          </a>
+          </>
         ) : (
           <Link href={`/dashboard`} className='flex'>
-              <p className='mr-3 underline'>Dashboard</p>
+              <p className='mr-3 underline'>Dashboard</p>        
           </Link>
         ))}
       <a
